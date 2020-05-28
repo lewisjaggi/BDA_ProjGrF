@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-import org.apache.spark.sql.SparkSession
+
 import org.apache.spark.sql._
 
 object taxi {
@@ -14,7 +14,7 @@ object taxi {
     val taxiRaw = spark.read.csv("taxidata\\1Mdata.csv")
     //taxiRaw = taxiRaw.map[RichRow](x => new RichRow(x))
 
-
+    import spark.implicits._
     val safeParse = safe(parse)
     val taxiParsed = taxiRaw.rdd.map(safeParse)
     taxiParsed.map(_.isLeft).countByValue().foreach(println)
@@ -22,8 +22,11 @@ object taxi {
     val hours = (pickup: Long, dropoff: Long) => {
       TimeUnit.HOURS.convert(dropoff - pickup, TimeUnit.MILLISECONDS)
     }
-    val taxiGood = taxiParsed.map(_.left.get)
+    val taxiGood = taxiParsed.map(_.left.get).toDS()
     taxiGood.cache()
+
+    println("END")
+
 
 
     //taxiRaw.show()
