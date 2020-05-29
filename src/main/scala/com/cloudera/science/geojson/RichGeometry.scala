@@ -63,6 +63,8 @@ class RichGeometry(val geometry: Geometry,
  * Helper object for implicitly creating RichGeometry wrappers
  * for a given Geometry instance.
  */
-object RichGeometry extends Serializable {
-  implicit def createRichGeometry(g: Geometry) = new RichGeometry(g)
+object RichGeometry {
+  implicit def wrapRichGeo(g: Geometry) = {
+    new RichGeometry(g)
+  }
 }

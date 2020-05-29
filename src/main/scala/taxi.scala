@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-
+import com.cloudera.science.geojson.FeatureCollection
 import org.apache.spark.sql._
 
 object taxi {
@@ -19,17 +19,40 @@ object taxi {
     val taxiParsed = taxiRaw.rdd.map(safeParse)
     taxiParsed.map(_.isLeft).countByValue().foreach(println)
 
+
     val hours = (pickup: Long, dropoff: Long) => {
       TimeUnit.HOURS.convert(dropoff - pickup, TimeUnit.MILLISECONDS)
     }
-    val taxiGood = taxiParsed.map(_.left.get).toDS()
+    val taxiGood = taxiParsed.map(_.left.get).toDF()
     taxiGood.cache()
+    taxiGood.show(100)
 
     println("END")
+/*
+    import org.apache.spark.sql.functions.udf
+    val hoursUDF = udf(hours)
+    taxiGood.
+      groupBy(hoursUDF($"pickupTime", $"dropoffTime").as("h")).
+      count().
+      sort("h").
+      show()*/
 
 
+    /*val geojson = scala.io.Source.
+      fromFile("nyc-boroughs.geojson").
+      mkString
 
-    //taxiRaw.show()
+    import com.cloudera.science.geojson
+    import com.cloudera.science.geojson.GeoJsonProtocol._
+    import spray.json._
+
+    val features = geojson.parseJson.convertTo[FeatureCollection]
+
+    import com.esri.core.geometry.Point
+    val p = new Point(-73.994499, 40.75066)
+    val borough = features.find(f => f.geometry.contains(p))
+    println(borough)
+    //taxiRaw.show()*/
   }
 
   def parseTaxiTime(rr: RichRow, timeField: String): Long = {

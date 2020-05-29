@@ -42,7 +42,7 @@ object GeoJsonProtocol extends DefaultJsonProtocol {
       GeometryEngine.geometryToGeoJson(g.csr, g.geometry).parseJson
     }
     def read(value: JsValue) = {
-      val mg = GeometryEngine.geoJsonToGeometry(value.compactPrint, 0, Geometry.Type.Unknown)
+      val mg = GeometryEngine.geometryFromGeoJson(value.compactPrint, 0, Geometry.Type.Unknown)
       new RichGeometry(mg.getGeometry, mg.getSpatialReference)
     }
   }

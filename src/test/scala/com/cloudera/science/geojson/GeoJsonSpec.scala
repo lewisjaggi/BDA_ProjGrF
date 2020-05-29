@@ -18,7 +18,7 @@ import com.esri.core.geometry.Point
 import org.scalatest.{Matchers, FlatSpec}
 import spray.json._
 import GeoJsonProtocol._
-
+/*
 class GeoJsonSpec extends FlatSpec with Matchers {
   val geojson = scala.io.Source.fromURL(getClass.getResource("/boroughs.geojson")).mkString
 
@@ -35,4 +35,4 @@ class GeoJsonSpec extends FlatSpec with Matchers {
     val features2 = geojson2.parseJson.convertTo[FeatureCollection]
     features2.toJson.compactPrint should be(geojson2)
   }
-}
+}*/
