@@ -8,16 +8,19 @@ import org.apache.spark.sql._
 object taxi {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder
-      .master("local")
-      .appName("Taxis")
-      .getOrCreate;
-    val taxiRaw = spark.read.csv("taxidata\\1Mdata.csv")
+      .master("local[*]")
+      .appName("My App")
+      .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
+      .getOrCreate()
+
+    val taxiRaw = spark.read.format("csv").option("header", "true") .load("taxidata\\1Mdata.csv")
+
     //taxiRaw = taxiRaw.map[RichRow](x => new RichRow(x))
 
     import spark.implicits._
     val safeParse = safe(parse)
     val taxiParsed = taxiRaw.rdd.map(safeParse)
-    taxiParsed.map(_.isLeft).countByValue().foreach(println)
+    //taxiParsed.map(_.isLeft).countByValue().foreach(println)
 
 
     val hours = (pickup: Long, dropoff: Long) => {
@@ -28,18 +31,18 @@ object taxi {
     taxiGood.show(100)
 
     println("END")
-/*
+
     import org.apache.spark.sql.functions.udf
     val hoursUDF = udf(hours)
-    taxiGood.
+    /*taxiGood.
       groupBy(hoursUDF($"pickupTime", $"dropoffTime").as("h")).
       count().
       sort("h").
       show()*/
 
 
-    /*val geojson = scala.io.Source.
-      fromFile("nyc-boroughs.geojson").
+    val geojson = scala.io.Source.
+      fromFile("taxidata/nyc-boroughs.geojson").
       mkString
 
     import com.cloudera.science.geojson
@@ -52,7 +55,7 @@ object taxi {
     val p = new Point(-73.994499, 40.75066)
     val borough = features.find(f => f.geometry.contains(p))
     println(borough)
-    //taxiRaw.show()*/
+    //taxiRaw.show()
   }
 
   def parseTaxiTime(rr: RichRow, timeField: String): Long = {
