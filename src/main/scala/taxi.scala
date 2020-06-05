@@ -2,17 +2,27 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-import com.cloudera.science.geojson.FeatureCollection
+import com.cloudera.science.geojson.{Feature, FeatureCollection}
 import org.apache.spark.sql._
+import org.apache.spark._
 
 object taxi {
   def main(args: Array[String]): Unit = {
+
+    import org.apache.log4j.Logger
+    import org.apache.log4j.Level
+
+    Logger.getLogger("org").setLevel(Level.OFF)
+    Logger.getLogger("akka").setLevel(Level.OFF)
+
+
+
     val spark = SparkSession.builder
       .master("local[*]")
       .appName("My App")
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
-
+    val sc = spark.sparkContext
     val taxiRaw = spark.read.format("csv").option("header", "true") .load("taxidata\\1Mdata.csv")
 
     //taxiRaw = taxiRaw.map[RichRow](x => new RichRow(x))
@@ -26,11 +36,10 @@ object taxi {
     val hours = (pickup: Long, dropoff: Long) => {
       TimeUnit.HOURS.convert(dropoff - pickup, TimeUnit.MILLISECONDS)
     }
-    val taxiGood = taxiParsed.map(_.left.get).toDF()
+    val taxiGood = taxiParsed.map(_.left.getOrElse(Trip("",0,0,0,0,0,0))).toDS()
     taxiGood.cache()
     taxiGood.show(100)
 
-    println("END")
 
     import org.apache.spark.sql.functions.udf
     val hoursUDF = udf(hours)
@@ -55,8 +64,89 @@ object taxi {
     val p = new Point(-73.994499, 40.75066)
     val borough = features.find(f => f.geometry.contains(p))
     println(borough)
-    //taxiRaw.show()
+
+    import org.apache.spark.sql.functions.udf
+
+    taxiGood.groupBy(hoursUDF($"pickupTime", $"dropoffTime").as("h")).
+      count().
+      sort("h").
+      show()
+
+    taxiGood.where(hoursUDF($"pickupTime", $"dropoffTime") < 0).
+      collect().
+      foreach(println)
+
+    spark.udf.register("hours", hours)
+    val taxiClean = taxiGood.where(
+      "hours(pickupTime, dropoffTime) BETWEEN 0 AND 3"
+    )
+
+    val areaSortedFeatures = features.sortBy(f => {
+      val borough = f("cartodb_id").convertTo[Int]
+      (borough, -f.geometry.area2D())
+    })
+
+    val bFeatures =  sc.broadcast(areaSortedFeatures)
+    val bLookup = (x: Double, y: Double) => {
+      val feature: Option[Feature] = bFeatures.value.find(f => {
+        f.geometry.contains(new Point(x, y))
+      })
+      feature.map(f => {
+        f("name").convertTo[String]
+      }).getOrElse("NA")
+    }
+    val boroughUDF = udf(bLookup)
+    taxiClean.
+      groupBy(boroughUDF($"dropoffX", $"dropoffY")).
+      count().
+      show()
+    taxiClean.
+      where(boroughUDF($"dropoffX", $"dropoffY") === "NA").
+      show()
+    val taxiDone = taxiClean.where(
+      "dropoffX != 0 and dropoffY != 0 and pickupX != 0 and pickupY != 0"
+    ).cache()
+    taxiDone.
+      groupBy(boroughUDF($"dropoffX", $"dropoffY")).
+      count().
+      show()
+
+    val sessions = taxiDone.
+      repartition($"license").
+      sortWithinPartitions($"license", $"pickupTime")
+    sessions.cache()
+
+    def boroughDuration(t1: Trip, t2: Trip): (String, Long) = {
+      val b = bLookup(t1.dropoffX, t1.dropoffY)
+      val d = (t2.pickupTime - t1.dropoffTime) / 1000
+      (b, d)
+    }
+
+    import org.apache.spark.sql.functions._
+
+    val boroughDurations: DataFrame =
+      sessions.mapPartitions(trips => {
+        val iter: Iterator[Seq[Trip]] = trips.sliding(2)
+        val viter = iter.
+          filter(_.size == 2).
+          filter(p => p(0).license == p(1).license)
+        viter.map(p => boroughDuration(p(0), p(1)))
+      }).toDF("borough", "seconds")
+    boroughDurations.
+      selectExpr("floor(seconds / 3600) as hours").
+      groupBy("hours").
+      count().
+      sort("hours").
+      show()
+    boroughDurations.
+      where("seconds > 0 AND seconds < 60*60*4").
+      groupBy("borough").
+      agg(avg("seconds"), stddev("seconds")).
+      show()
+
   }
+
+
 
   def parseTaxiTime(rr: RichRow, timeField: String): Long = {
     val formatter = new SimpleDateFormat(
