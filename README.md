@@ -46,8 +46,6 @@ Nous avons donc essayer avec une autre manière en utilisant un foreach sur la l
 
 ## Optimisations
 
-## Approche de test et d'évaluation
-
 ## Résultats
 1. Vitesse moyenne en Km/h dans les différents quartiers de New York 
 
