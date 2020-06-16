@@ -74,6 +74,8 @@ On peut remarquer que dans certain quartier il est plus facile de circuler en g�
 |      18|    Manhattan|55521|
 |       7|        Bronx|   81|
 
+On remarque que le soir il vaut mieux être à Manhattan ou le Queens pour avoir plus de chance d'avoir des clients. Staten Island et le Bronx sont plutôt des quartiers matinales. Avec ces indications les chauffeurs de taxis peuvent savoir où à quelle heure il est préférable de ce placer dans un quartier pour avoir des clients.
+
 3. le nombre de voyageur moyen par taxi par jour
 
 Max : 270
