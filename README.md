@@ -87,6 +87,12 @@ Mediane : 17.33
 Min : 1
 
 ## Améliorations possibles
+En utilisant une carte et les points geojsno nous pourrions produire une heatmap des départ ainsi que des arrivés.
+
+Le dataset de base a beaucoup de row mais manque un peu de features, il serait intéréssant d'avoir les points qui constitue le trajet effectué par le taxi. Avec cela nous pourrions les déssiné sur une carte et trouvé les routes les plus emprunter.
+
+
+
 
 
 
