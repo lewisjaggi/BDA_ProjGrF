@@ -11,6 +11,7 @@ object taxi {
 
     import org.apache.log4j.Logger
     import org.apache.log4j.Level
+    import org.apache.spark.sql.functions._
 
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("akka").setLevel(Level.OFF)
@@ -23,7 +24,7 @@ object taxi {
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
     val sc = spark.sparkContext
-    val taxiRaw = spark.read.format("csv").option("header", "true") .load("taxidata\\1Mdata.csv")
+    val taxiRaw = spark.read.format("csv").option("header", "true") .load("taxidata\\100mData.csv")
 
     //taxiRaw = taxiRaw.map[RichRow](x => new RichRow(x))
 
@@ -36,9 +37,11 @@ object taxi {
     val hours = (pickup: Long, dropoff: Long) => {
       TimeUnit.HOURS.convert(dropoff - pickup, TimeUnit.MILLISECONDS)
     }
-    val taxiGood = taxiParsed.map(_.left.getOrElse(Trip("",0,0,0,0,0,0))).toDS()
+
+
+    val taxiGood = taxiParsed.map(_.left.getOrElse(Trip("",0,0,0,0,0,0,0,0,0))).toDS().filter(t => t.license != "")
     taxiGood.cache()
-    taxiGood.show(100)
+    taxiGood.show(10)
 
 
     import org.apache.spark.sql.functions.udf
@@ -50,9 +53,9 @@ object taxi {
       show()*/
 
 
-    val geojson = scala.io.Source.
-      fromFile("taxidata/nyc-boroughs.geojson").
-      mkString
+    val textFromSource = scala.io.Source.fromFile("taxidata/nyc-boroughs.geojson")
+    val geojson = textFromSource.mkString
+    textFromSource.close()
 
     import com.cloudera.science.geojson
     import com.cloudera.science.geojson.GeoJsonProtocol._
@@ -63,9 +66,9 @@ object taxi {
     import com.esri.core.geometry.Point
     val p = new Point(-73.994499, 40.75066)
     val borough = features.find(f => f.geometry.contains(p))
-    println(borough)
 
     import org.apache.spark.sql.functions.udf
+
 
     taxiGood.groupBy(hoursUDF($"pickupTime", $"dropoffTime").as("h")).
       count().
@@ -111,6 +114,41 @@ object taxi {
       count().
       show()
 
+    /*
+    val speed = (tripDist: Double, tripTime: Long) => {
+      toKm(tripDist) / (tripTime / 3600.0)
+    }
+    val speedUDF = udf(speed)
+    spark.udf.register("speed", speed)
+
+    val taxiSpeed = taxiGood.filter(t => t.tripDistance != 0 && t.tripTimeInSecs != 0)
+      .where(boroughUDF($"dropoffX", $"dropoffY") === boroughUDF($"pickupX", $"pickupY") && boroughUDF($"dropoffX", $"dropoffY") =!= "NA")
+      .withColumn("Borough", boroughUDF($"dropoffX", $"dropoffY"))
+      .withColumn("AvgSpeed", speedUDF($"tripDistance", $"tripTimeInSecs"))
+      .filter($"AvgSpeed" < 90)
+    taxiSpeed.cache();
+    taxiSpeed.show(10)
+
+
+
+    taxiSpeed.groupBy($"Borough").agg(avg($"AvgSpeed").as("AvgSpeed")).orderBy(desc("AvgSpeed")).show(10)*/
+
+
+   // println("Average :" + taxiSpeed.select(avg("AvgSpeed")).head());
+    //println("Median : " +  taxiSpeed.stat.approxQuantile("AvgSpeed", Array(0.5), 0.001).head)
+
+
+    val hourFloor = (time: Long) => {
+      (TimeUnit.HOURS.convert(time, TimeUnit.MILLISECONDS) / 1000 / 60 / 60) % 24
+    }
+    val hourFlourUDF = udf(hourFloor)
+    spark.udf.register("hourFloor", hourFloor)
+
+    taxiGood.groupBy($"hourTime").sum().orderBy($"hourTime")show()
+
+
+
+/*
     val sessions = taxiDone.
       repartition($"license").
       sortWithinPartitions($"license", $"pickupTime")
@@ -122,7 +160,7 @@ object taxi {
       (b, d)
     }
 
-    import org.apache.spark.sql.functions._
+
 
     val boroughDurations: DataFrame =
       sessions.mapPartitions(trips => {
@@ -142,20 +180,36 @@ object taxi {
       where("seconds > 0 AND seconds < 60*60*4").
       groupBy("borough").
       agg(avg("seconds"), stddev("seconds")).
-      show()
+      show()*/
+
+
 
   }
 
 
-
+  def toKm(miles: Double): Double = {
+    return miles * 1.60934
+  }
   def parseTaxiTime(rr: RichRow, timeField: String): Long = {
     val formatter = new SimpleDateFormat(
       "yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
     val optDt = rr.getAs[String](timeField)
     optDt.map(dt => formatter.parse(dt).getTime).getOrElse(0L)
   }
+  def parseTaxiTimeHour(rr: RichRow, timeField: String): Long = {
+    import java.util.{Calendar, Date}
+    val formatter = new SimpleDateFormat(
+      "yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+    val parser = new SimpleDateFormat(
+      "HH", Locale.ENGLISH)
+    val optDt = rr.getAs[String](timeField)
+    optDt.map(dt => parser.format(formatter.parse(dt)).toLong).getOrElse(0L)
+  }
   def parseTaxiLoc(rr: RichRow, locField: String): Double = {
     rr.getAs[String](locField).map(_.toDouble).getOrElse(0.0)
+  }
+  def parseTaxiT(rr: RichRow, locField: String): Long = {
+    rr.getAs[String](locField).map(_.toLong).getOrElse(0)
   }
   def parse(row: org.apache.spark.sql.Row): Trip = {
     val rr = new RichRow(row)
@@ -166,7 +220,10 @@ object taxi {
       pickupX = parseTaxiLoc(rr, "pickup_longitude"),
       pickupY = parseTaxiLoc(rr, "pickup_latitude"),
       dropoffX = parseTaxiLoc(rr, "dropoff_longitude"),
-      dropoffY = parseTaxiLoc(rr, "dropoff_latitude")
+      dropoffY = parseTaxiLoc(rr, "dropoff_latitude"),
+      tripDistance = parseTaxiLoc(rr, "trip_distance"),
+      tripTimeInSecs = parseTaxiT(rr, "trip_time_in_secs"),
+      hourTime = parseTaxiTimeHour(rr, "pickup_datetime")
     )
   }
 

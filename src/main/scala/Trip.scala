@@ -5,4 +5,8 @@ case class Trip(
                  pickupX: Double,
                  pickupY: Double,
                  dropoffX: Double,
-                 dropoffY: Double)
+                 dropoffY: Double,
+                 tripDistance: Double,
+                 tripTimeInSecs : Long,
+                 hourTime : Long
+               )
