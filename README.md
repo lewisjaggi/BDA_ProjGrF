@@ -31,6 +31,13 @@ Analyse du temps entre les course selon le quartier de New-York.
 2. Les heures où il y a le plus de course par quartier
 3. Le nombre moyen de personne déplacé par un chauffeur en une journée
 
+## Résolution
+1. Vitesse moyenne sur le trajet selon le quartier
+Pour trouver la vitesse nous avons ajouté à notre classe trip la distance ainsi que le temps de la course. Ensuite nous avons gardé uniquement les courses avec l'arrrivé et le départ dans le même quartier. Pour finir avec une fonction udf on calcul la vitesse en convertissant la distance en kilomètre et en divisant par le temps en heure.
+
+2. Les heures où il y a le plus de course par quartier
+Nous avons dû récupérer le quartier de la position de départ. en supprimant les positions incorrect. Après nous avons ajouté la varaible hourTime à notre case class trip elle contient l'heure de la journée. Pour avoir cette nous avons un parser qui garde uniquement l'heure des timestamps. On regroupe les données par huere et par quartier en contant le nombre d'enregistrement. pour finir nous classons les quartiers par nombre d'enregistrement. POur garder seulement le plus grand on utilise dropDuplicate qui garde uniquement la première instance de cahque quartier et donc en triant avant on garde uniquement les maximums.
+
 ## Optimisations
 
 ## Approche de test et d'évaluation
@@ -56,6 +63,12 @@ Analyse du temps entre les course selon le quartier de New-York.
 |       8|Staten Island|   11|
 |      18|    Manhattan|55521|
 |       7|        Bronx|   81|
+
+3. le nombre de voyageur moyen par taxi par jour
+Max : 270
+Moyenne : 27,36
+Mediane : 17.33
+Min : 1
 
 ## Améliorations possibles
 
