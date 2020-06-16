@@ -46,6 +46,15 @@ Analyse du temps entre les course selon le quartier de New-York.
 | Manhattan    | 20.01197981484557     | 
 
 
+|hourTime|      Borough|count|
+|--------|-------------|-----|
+|      17|       Queens| 3145|
+|       1|     Brooklyn| 1913|
+|       8|Staten Island|   11|
+|      18|    Manhattan|55521|
+|       7|        Bronx|   81|
+
 ## Améliorations possibles
+
 
 
