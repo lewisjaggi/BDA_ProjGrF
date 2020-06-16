@@ -58,6 +58,8 @@ Nous avons donc essayer avec une autre manière en utilisant un foreach sur la l
 | Staten Islan    |20.432806529231634     | 
 | Manhattan    | 20.01197981484557     | 
 
+![](https://i.imgur.com/7OQQav5.png)
+
 
 2. L'heure par quartier avec le plus de course de taxi
 
