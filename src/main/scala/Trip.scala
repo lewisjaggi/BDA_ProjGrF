@@ -8,5 +8,6 @@ case class Trip(
                  dropoffY: Double,
                  tripDistance: Double,
                  tripTimeInSecs : Long,
-                 hourTime : Long
+                 hourTime : Long,
+                 people : Long
                )

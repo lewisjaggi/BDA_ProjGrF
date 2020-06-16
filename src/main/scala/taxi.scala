@@ -6,6 +6,9 @@ import com.cloudera.science.geojson.{Feature, FeatureCollection}
 import org.apache.spark.sql._
 import org.apache.spark._
 
+import scala.collection.immutable.Range
+import scala.math.Numeric.Implicits.infixNumericOps
+
 object taxi {
   def main(args: Array[String]): Unit = {
 
@@ -24,7 +27,7 @@ object taxi {
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
     val sc = spark.sparkContext
-    val taxiRaw = spark.read.format("csv").option("header", "true") .load("taxidata\\100mData.csv")
+    val taxiRaw = spark.read.format("csv").option("header", "true") .load("taxidata\\trip_data_1.csv")
 
     //taxiRaw = taxiRaw.map[RichRow](x => new RichRow(x))
 
@@ -39,7 +42,7 @@ object taxi {
     }
 
 
-    val taxiGood = taxiParsed.map(_.left.getOrElse(Trip("",0,0,0,0,0,0,0,0,0))).toDS().filter(t => t.license != "")
+    val taxiGood = taxiParsed.map(_.left.getOrElse(Trip("",0,0,0,0,0,0,0,0,0,0))).toDS().filter(t => t.license != "")
     taxiGood.cache()
     taxiGood.show(10)
 
@@ -67,22 +70,22 @@ object taxi {
     val p = new Point(-73.994499, 40.75066)
     val borough = features.find(f => f.geometry.contains(p))
 
-    import org.apache.spark.sql.functions.udf
+    import org.apache.spark.sql.functions._
 
 
-    taxiGood.groupBy(hoursUDF($"pickupTime", $"dropoffTime").as("h")).
+    /*taxiGood.groupBy(hoursUDF($"pickupTime", $"dropoffTime").as("h")).
       count().
       sort("h").
       show()
 
     taxiGood.where(hoursUDF($"pickupTime", $"dropoffTime") < 0).
       collect().
-      foreach(println)
+      foreach(println)*/
 
     spark.udf.register("hours", hours)
-    val taxiClean = taxiGood.where(
+   /* val taxiClean = taxiGood.where(
       "hours(pickupTime, dropoffTime) BETWEEN 0 AND 3"
-    )
+    )*/
 
     val areaSortedFeatures = features.sortBy(f => {
       val borough = f("cartodb_id").convertTo[Int]
@@ -99,7 +102,7 @@ object taxi {
       }).getOrElse("NA")
     }
     val boroughUDF = udf(bLookup)
-    taxiClean.
+   /* taxiClean.
       groupBy(boroughUDF($"dropoffX", $"dropoffY")).
       count().
       show()
@@ -112,9 +115,12 @@ object taxi {
     taxiDone.
       groupBy(boroughUDF($"dropoffX", $"dropoffY")).
       count().
-      show()
+      show()*/
 
-    /*
+
+
+    //AVERAGE SPEED
+
     val speed = (tripDist: Double, tripTime: Long) => {
       toKm(tripDist) / (tripTime / 3600.0)
     }
@@ -127,60 +133,102 @@ object taxi {
       .withColumn("AvgSpeed", speedUDF($"tripDistance", $"tripTimeInSecs"))
       .filter($"AvgSpeed" < 90)
     taxiSpeed.cache();
-    taxiSpeed.show(10)
 
-
-
-    taxiSpeed.groupBy($"Borough").agg(avg($"AvgSpeed").as("AvgSpeed")).orderBy(desc("AvgSpeed")).show(10)*/
-
-
+    taxiSpeed.groupBy($"Borough").agg(avg($"AvgSpeed").as("AvgSpeed")).orderBy(desc("AvgSpeed")).show(10)
    // println("Average :" + taxiSpeed.select(avg("AvgSpeed")).head());
     //println("Median : " +  taxiSpeed.stat.approxQuantile("AvgSpeed", Array(0.5), 0.001).head)
 
+    //BEST HOUR IN EACH BOROUGH
 
-    val hourFloor = (time: Long) => {
-      (TimeUnit.HOURS.convert(time, TimeUnit.MILLISECONDS) / 1000 / 60 / 60) % 24
+
+    taxiGood.withColumn("Borough", boroughUDF($"pickupX", $"pickupY"))
+      .select($"hourTime", $"Borough")
+      .where($"Borough" =!= "NA")
+      .groupBy($"hourTime",  $"Borough")
+      .count()
+      .orderBy($"Borough", desc("count"))
+      .dropDuplicates("Borough")
+      .show(200)
+
+    //NUMBER OF PEOPLE TAKE BY ONE TAXY
+
+
+    val day = (time: Long) => {
+      TimeUnit.DAYS.convert(time, TimeUnit.MILLISECONDS)
     }
-    val hourFlourUDF = udf(hourFloor)
-    spark.udf.register("hourFloor", hourFloor)
+    val dayUDF = udf(day)
+    spark.udf.register("day", day)
 
-    taxiGood.groupBy($"hourTime").sum().orderBy($"hourTime")show()
+    println("NB License  : " +  taxiGood.select($"license").distinct().count())
+    val taxiLPD = taxiGood.withColumn("day", dayUDF($"pickupTime"))
+      .select($"license", $"people", $"day").where($"license" =!= "null")
+      taxiLPD.cache()
 
+    /*taxiLPD.groupBy($"license")
+      .sum("people")
+      .groupBy($"day")
+      .avg("sum(people)")
+      .orderBy(desc("avg(people)"))
+      .show()*/
 
-
-/*
-    val sessions = taxiDone.
-      repartition($"license").
-      sortWithinPartitions($"license", $"pickupTime")
-    sessions.cache()
-
-    def boroughDuration(t1: Trip, t2: Trip): (String, Long) = {
-      val b = bLookup(t1.dropoffX, t1.dropoffY)
-      val d = (t2.pickupTime - t1.dropoffTime) / 1000
-      (b, d)
+   /* val avgPerDay = (peopleNumber: Long) => {
+      peopleNumber / 31.0;
     }
+    val avgPerDayUDF = udf(avgPerDay)
+
+      taxiLPD.groupBy($"license")
+      .agg(sum("people"))
+      .withColumn("AvgPerDay", avgPerDayUDF($"sum(people)"))
+      .orderBy(desc("AvgPerDay"))
+      .show()*/
+
+    /*val listRes = List(List())
+
+    taxiGood.select($"license").distinct().collect().foreach(row  =>{
+      taxiLPD.where($"license" === row.get(0)).groupBy($"day").sum().select(avg("sum(people)")).collect() :: listRes
+    }
+    )*/
+
+    val days  = taxiLPD.groupBy($"license").agg(countDistinct("day").as("dayDistinc")).orderBy($"license").collect() //select("day").distinct().count()
+    val peoples =  taxiLPD.groupBy($"license").agg(sum($"people")).orderBy($"license").collect()
+
+    (days, peoples).zipped.map{ case (d, p) => println(p.get(0).asInstanceOf[String] + " :  " + p.get(1).asInstanceOf[Long].toFloat / d.get(1).asInstanceOf[Long])}
 
 
 
-    val boroughDurations: DataFrame =
-      sessions.mapPartitions(trips => {
-        val iter: Iterator[Seq[Trip]] = trips.sliding(2)
-        val viter = iter.
-          filter(_.size == 2).
-          filter(p => p(0).license == p(1).license)
-        viter.map(p => boroughDuration(p(0), p(1)))
-      }).toDF("borough", "seconds")
-    boroughDurations.
-      selectExpr("floor(seconds / 3600) as hours").
-      groupBy("hours").
-      count().
-      sort("hours").
-      show()
-    boroughDurations.
-      where("seconds > 0 AND seconds < 60*60*4").
-      groupBy("borough").
-      agg(avg("seconds"), stddev("seconds")).
-      show()*/
+    /*
+        val sessions = taxiDone.
+          repartition($"license").
+          sortWithinPartitions($"license", $"pickupTime")
+        sessions.cache()
+
+        def boroughDuration(t1: Trip, t2: Trip): (String, Long) = {
+          val b = bLookup(t1.dropoffX, t1.dropoffY)
+          val d = (t2.pickupTime - t1.dropoffTime) / 1000
+          (b, d)
+        }
+
+
+
+        val boroughDurations: DataFrame =
+          sessions.mapPartitions(trips => {
+            val iter: Iterator[Seq[Trip]] = trips.sliding(2)
+            val viter = iter.
+              filter(_.size == 2).
+              filter(p => p(0).license == p(1).license)
+            viter.map(p => boroughDuration(p(0), p(1)))
+          }).toDF("borough", "seconds")
+        boroughDurations.
+          selectExpr("floor(seconds / 3600) as hours").
+          groupBy("hours").
+          count().
+          sort("hours").
+          show()
+        boroughDurations.
+          where("seconds > 0 AND seconds < 60*60*4").
+          groupBy("borough").
+          agg(avg("seconds"), stddev("seconds")).
+          show()*/
 
 
 
@@ -197,7 +245,6 @@ object taxi {
     optDt.map(dt => formatter.parse(dt).getTime).getOrElse(0L)
   }
   def parseTaxiTimeHour(rr: RichRow, timeField: String): Long = {
-    import java.util.{Calendar, Date}
     val formatter = new SimpleDateFormat(
       "yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
     val parser = new SimpleDateFormat(
@@ -211,6 +258,9 @@ object taxi {
   def parseTaxiT(rr: RichRow, locField: String): Long = {
     rr.getAs[String](locField).map(_.toLong).getOrElse(0)
   }
+  def parseTaxiPeople(rr: RichRow, peopleField: String): Long = {
+    rr.getAs[String](peopleField).map(_.toLong).getOrElse(0)
+  }
   def parse(row: org.apache.spark.sql.Row): Trip = {
     val rr = new RichRow(row)
     Trip(
@@ -223,7 +273,8 @@ object taxi {
       dropoffY = parseTaxiLoc(rr, "dropoff_latitude"),
       tripDistance = parseTaxiLoc(rr, "trip_distance"),
       tripTimeInSecs = parseTaxiT(rr, "trip_time_in_secs"),
-      hourTime = parseTaxiTimeHour(rr, "pickup_datetime")
+      hourTime = parseTaxiTimeHour(rr, "pickup_datetime"),
+      people = parseTaxiPeople(rr, "passenger_count")
     )
   }
 
