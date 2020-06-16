@@ -15,7 +15,7 @@ medallion, hack_license, vendor_id, rate_code, store_and_fwd_flag, pickup_dateti
 
 #### Fichiers
 Le dataset et composé de 12 fichiers contenant 14 millions de lignes chacun. La totalité du dataset pèse 30gb
-
+http://www.andresmh.com/nyctaxitrips/
 
 ## Features utilisées et pre-processing
 Les localisations de latitude et de longitude sont transformées en quartier de New York. La distance est transformée en kilomètre.
