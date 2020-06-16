@@ -72,9 +72,13 @@ Nous avons donc essayer avec une autre manière en utilisant un foreach sur la l
 |       7|        Bronx|   81|
 
 3. le nombre de voyageur moyen par taxi par jour
+
 Max : 270
+
 Moyenne : 27,36
+
 Mediane : 17.33
+
 Min : 1
 
 ## Améliorations possibles
