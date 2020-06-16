@@ -27,15 +27,24 @@ Analyse du temps entre les course selon le quartier de New-York.
 
 ## Questions supplémentaires :
 
-- Vitesse moyenne sur le trajet selon le quartier
-- Les heures où il y a le plus de course par quartier
-- Le nombre moyen de personne déplacé par un chauffeur en une journée
+1. Vitesse moyenne sur le trajet selon le quartier
+2. Les heures où il y a le plus de course par quartier
+3. Le nombre moyen de personne déplacé par un chauffeur en une journée
 
 ## Optimisations
 
 ## Approche de test et d'évaluation
 
 ## Résultats
+1.
+| Borough | AvgSpeed |
+| -------- | -------- | 
+| Queens    | 33.09861308585534     | 
+| Brooklyn    | 23.6755087731464     | 
+| Bronx    | 22.726006951631792    | 
+| Staten Islan    |20.432806529231634     | 
+| Manhattan    | 20.01197981484557     | 
+
 
 ## Améliorations possibles
 
