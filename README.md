@@ -36,7 +36,8 @@ Analyse du temps entre les course selon le quartier de New-York.
 ## Approche de test et d'évaluation
 
 ## Résultats
-1.
+1. Vitesse moyenne en Km/h dans les différents quartiers de New York 
+
 | Borough | AvgSpeed |
 | -------- | -------- | 
 | Queens    | 33.09861308585534     | 
@@ -45,6 +46,8 @@ Analyse du temps entre les course selon le quartier de New-York.
 | Staten Islan    |20.432806529231634     | 
 | Manhattan    | 20.01197981484557     | 
 
+
+2. L'heure par quartier avec le plus de course de taxi
 
 |hourTime|      Borough|count|
 |--------|-------------|-----|
