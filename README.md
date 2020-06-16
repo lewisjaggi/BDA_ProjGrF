@@ -36,7 +36,7 @@ Analyse du temps entre les course selon le quartier de New-York.
 Pour trouver la vitesse nous avons ajouté à notre classe trip la distance ainsi que le temps de la course. Ensuite nous avons gardé uniquement les courses avec l'arrrivé et le départ dans le même quartier. Pour finir avec une fonction udf on calcul la vitesse en convertissant la distance en kilomètre et en divisant par le temps en heure.
 
 2. Les heures où il y a le plus de course par quartier
-Nous avons dû récupérer le quartier de la position de départ. en supprimant les positions incorrect. Après nous avons ajouté la varaible hourTime à notre case class trip elle contient l'heure de la journée. Pour avoir cette nous avons un parser qui garde uniquement l'heure des timestamps. On regroupe les données par huere et par quartier en contant le nombre d'enregistrement. pour finir nous classons les quartiers par nombre d'enregistrement. Pour garder seulement le plus grand on utilise dropDuplicate qui garde uniquement la première instance de cahque quartier et donc en triant avant on garde uniquement les maximums.
+Nous avons dû récupérer le quartier de la position de départ. en supprimant les positions incorrect. Après nous avons ajouté la varaible hourTime à notre case class trip elle contient l'heure de la journée. Pour avoir cette nous avons un parser qui garde uniquement l'heure des timestamps. On regroupe les données par heure et par quartier en contant le nombre d'enregistrement. pour finir nous classons les quartiers par nombre d'enregistrement. Pour garder seulement le plus grand on utilise dropDuplicate qui garde uniquement la première instance de cahque quartier et donc en triant avant on garde uniquement les maximums.
 
 3. Le nombre moyen de personne déplacé par un chauffeur en une journée
 Nous avons d'abords essayer en regroupant les donnée par taxi(license) et par date mais nous n'arivions pas faire une somme lors du regroupement par taxi puis une moyenne lors du regroupant par date.
@@ -60,6 +60,8 @@ Nous avons donc essayer avec une autre manière en utilisant un foreach sur la l
 | Manhattan    | 20.01197981484557     | 
 
 ![](https://i.imgur.com/7OQQav5.png)
+
+On peut remarquer que dans certain quartier il est plus facile de circuler en général. À Manhattan, où il y beaucoup de circulation, la vitesse moyenne est plus basse qu'ailleure.
 
 
 2. L'heure par quartier avec le plus de course de taxi
