@@ -43,8 +43,9 @@ Nous avons d'abords essayer en regroupant les donnée par taxi(license) et par d
 
 Nous avons donc essayer avec une autre manière en utilisant un foreach sur la liste des taxis qui retournait la moyenne pour le taxi mais le temps de traittement étais très long.
 
-
 ## Optimisations
+### Utilisation de session
+Il est possible avec spark sql de créer des partitions. Nous avons essayé pour la dernière question de créer des partitions avec les différentes licences.
 
 ## Résultats
 1. Vitesse moyenne en Km/h dans les différents quartiers de New York 
