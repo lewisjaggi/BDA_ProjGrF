@@ -45,7 +45,7 @@ Nous avons donc essayer avec une autre manière en utilisant un foreach sur la l
 
 ## Optimisations
 ### Utilisation de session
-Il est possible avec spark sql de créer des partitions. Nous avons essayé pour la dernière question de créer des partitions avec les différentes licences.
+Il est possible avec spark sql de créer des partitions. Nous avons essayé pour la dernière question de créer des partitions avec les différentes licences. Cependant, nous avons rencontrer des problèmes pour utilier les partitions.
 
 ## Résultats
 1. Vitesse moyenne en Km/h dans les différents quartiers de New York 
