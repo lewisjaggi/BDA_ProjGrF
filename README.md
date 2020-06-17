@@ -33,10 +33,10 @@ Analyse du temps entre les course selon le quartier de New-York.
 
 ## Résolution
 1. Vitesse moyenne sur le trajet selon le quartier
-Pour trouver la vitesse nous avons ajouté à notre classe trip la distance ainsi que le temps de la course. Ensuite nous avons gardé uniquement les courses avec l'arrrivé et le départ dans le même quartier. Pour finir avec une fonction udf on calcul la vitesse en convertissant la distance en kilomètre et en divisant par le temps en heure.
+Pour trouver la vitesse nous avons ajouté à notre classe trip la distance ainsi que le temps de la course. Ensuite nous avons gardé uniquement les courses avec l'arrrivé et le départ dans le même quartier. Pour finir avec une fonction udf, on calcul la vitesse en convertissant la distance en kilomètre et en divisant par le temps en heure.
 
 2. Les heures où il y a le plus de course par quartier
-Nous avons dû récupérer le quartier de la position de départ. en supprimant les positions incorrect. Après nous avons ajouté la varaible hourTime à notre case class trip elle contient l'heure de la journée. Pour avoir cette nous avons un parser qui garde uniquement l'heure des timestamps. On regroupe les données par heure et par quartier en contant le nombre d'enregistrement. pour finir nous classons les quartiers par nombre d'enregistrement. Pour garder seulement le plus grand on utilise dropDuplicate qui garde uniquement la première instance de cahque quartier et donc en triant avant on garde uniquement les maximums.
+Nous avons dû récupérer le quartier de la position de départ. en supprimant les positions incorrects. Après nous avons ajouté la variable hourTime à notre case class trip elle contient l'heure de la journée. Pour avoir cette nous avons un parser qui garde uniquement l'heure des timestamps. On regroupe les données par heure et par quartier en comptant le nombre d'enregistrement. pour finir nous classons les quartiers par nombre d'enregistrement. Pour garder seulement le plus grand on utilise dropDuplicate qui garde uniquement la première instance de chaque quartier et donc en triant avant on garde uniquement les maximums.
 
 3. Le nombre moyen de personne déplacé par un chauffeur en une journée
 Nous avons d'abords essayer en regroupant les donnée par taxi(license) et par date mais nous n'arivions pas faire une somme lors du regroupement par taxi puis une moyenne lors du regroupant par date.
@@ -65,7 +65,7 @@ On peut remarquer que dans certain quartier il est plus facile de circuler en g�
 
 2. L'heure par quartier avec le plus de course de taxi
 
-|hourTime|      Borough|count|
+|Hour of the day|      Borough|count|
 |--------|-------------|-----|
 |      17|       Queens| 3145|
 |       1|     Brooklyn| 1913|
