@@ -22,7 +22,7 @@ Les localisations de latitude et de longitude sont transformées en quartier de 
 
 
 ## Analyse de départ :
-Analyse du temps entre les courses selon le quartier de New-York.
+Le but de départ du projet et de connaître le quartier où il est plus facile de retrouver une course. Pour trouver cette information, plusieurs opérations sont effectuées. Les enregistrements invalides sont supprimées. Par exemple s'il y a des valeurs null, des champs vides, si le drop off datetime est avant le pick off ou si le temps de course est trop long. Ensuite le temps de course est calculé et les valeurs en dessous de 0 sont supprimées. Les postions (latitude, longitude) sont transformées en quartier. Les coordonnées sont transformées en croodonnées 2d (WKID) est grâce à une librairie de géométrie 2d et un fichier geojson elles sont converties en quartier. Ensuite grâce au système de session, toutes les courses d'un taxi sont regroupées et triées dans par pickup time. La standard déviation et la moyenne est calculé par quartier.
 
 
 ## Questions supplémentaires :
