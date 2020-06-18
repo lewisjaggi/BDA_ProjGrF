@@ -88,7 +88,7 @@ Min : 1
 ## Améliorations possibles
 En utilisant une carte et les points geojson nous pourrions produire une heatmap des départs ainsi que des arrivés.
 
-Le dataset de base a beaucoup de row mais manque un peu de features, il serait intéressant d'avoir les points qui constitue le trajet effectué par le taxi. Avec cela nous pourrions les dessiner sur une carte et trouver les routes les plus empruntées.
+Le dataset de base a beaucoup de row mais manque un peu de features, il serait intéressant d'avoir les points qui constituent le trajet effectué par le taxi. Avec cela nous pourrions les dessiner sur une carte et trouver les routes les plus empruntées.
 
 
 
